@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>暖序 1.0.0 · 公测前审计报告</title>
+<style>
+  :root{
+    --paper:#F4F4F0; --card:#FFFFFF; --ink:#23211D; --ink-2:#5B574F; --ink-3:#8C877C;
+    --line:#E3E0D8; --warm:#B4763C; --warm-bg:#FBF3E8;
+    --ok:#3E7A52; --ok-bg:#EDF6EF;
+    --warn:#A8752A; --warn-bg:#FDF5E4;
+    --risk:#A8453C; --risk-bg:#FBEDEB;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:48px 24px 80px; background:var(--paper); color:var(--ink);
+    font:15px/1.75 -apple-system,"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto}
+  header{margin-bottom:36px;padding-bottom:28px;border-bottom:2px solid var(--line)}
+  .kicker{font-size:12px;letter-spacing:.16em;color:var(--warm);font-weight:600;margin-bottom:10px}
+  h1{margin:0 0 12px;font-size:31px;line-height:1.3;letter-spacing:-.01em;font-weight:650}
+  .meta{color:var(--ink-3);font-size:13px;display:flex;gap:18px;flex-wrap:wrap}
+  .meta b{color:var(--ink-2);font-weight:600}
+
+  .verdict{
+    background:var(--ok-bg);border:1px solid #CFE3D4;border-left:4px solid var(--ok);
+    border-radius:10px;padding:20px 22px;margin:0 0 36px;
+  }
+  .verdict h2{margin:0 0 8px;font-size:17px;color:var(--ok);font-weight:650}
+  .verdict p{margin:0;color:var(--ink-2);font-size:14px}
+
+  h2.sec{font-size:19px;margin:44px 0 6px;font-weight:650;letter-spacing:-.01em}
+  .sec-note{color:var(--ink-3);font-size:13px;margin:0 0 18px}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:18px 20px;margin-bottom:12px;
+  }
+  .card h3{margin:0 0 6px;font-size:15px;font-weight:650;display:flex;gap:9px;align-items:baseline}
+  .card p{margin:0;color:var(--ink-2);font-size:13.5px}
+  .card p + p{margin-top:7px}
+  .num{
+    flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+    width:20px;height:20px;border-radius:50%;background:var(--warm-bg);color:var(--warm);
+    font-size:11.5px;font-weight:700;transform:translateY(-1px);
+  }
+  code{
+    background:#F0EEE7;border-radius:4px;padding:1px 5px;font-size:12.5px;
+    font-family:"Cascadia Code",Consolas,monospace;color:#4A4438;
+  }
+  .fix{color:var(--ok);font-weight:600}
+
+  table{width:100%;border-collapse:collapse;background:var(--card);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:13.5px}
+  th,td{padding:11px 16px;text-align:left;border-bottom:1px solid var(--line)}
+  th{background:#FAF9F5;font-weight:600;font-size:12.5px;color:var(--ink-2);letter-spacing:.02em}
+  tr:last-child td{border-bottom:none}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+  .pass{color:var(--ok);font-weight:600}
+
+  .tag{
+    display:inline-block;padding:1px 8px;border-radius:20px;font-size:11.5px;font-weight:600;
+    vertical-align:1px;
+  }
+  .t-must{background:var(--risk-bg);color:var(--risk)}
+  .t-should{background:var(--warn-bg);color:var(--warn)}
+  .t-later{background:#EFEDE6;color:var(--ink-3)}
+
+  ul.plain{margin:0;padding-left:20px;color:var(--ink-2);font-size:13.5px}
+  ul.plain li{margin:5px 0}
+  ul.plain li b{color:var(--ink)}
+
+  footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);
+    color:var(--ink-3);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">发布前审计 · 软件测试工程师视角</div>
+  <h1>暖序 1.0.0 公测前审计报告</h1>
+  <div class="meta">
+    <span>审计对象 <b>装机版 + 绿色版</b></span>
+    <span>构建 <b>2026-10-24 01:56</b></span>
+    <span>验收项 <b>40 项自动化断言</b></span>
+    <span>结果 <b>全部通过</b></span>
+  </div>
+</header>
+
+<div class="verdict">
+  <h2>结论：可以开公测</h2>
+  <p>没有阻断性缺陷。核心链路（色温写入与还原、暂停计时、全局快捷键、开机自启、开窗尺寸、
+  安装与卸载）在装机版上逐项跑通。剩下的是「发布动作」而非「代码问题」——代码签名、
+  官网链接、发布说明这三件事需要先定下来，见第三节。</p>
+</div>
+
+<h2 class="sec">一、本轮修复的 10 个问题</h2>
+<p class="sec-note">按「用户会不会真的撞上」排序。前三条属于会真实损坏用户数据或体验的缺陷。</p>
+
+<div class="card">
+  <h3><span class="num">1</span>启动后才插上的显示器，退出时会被抹掉校色仪校准</h3>
+  <p>原始色彩快照只按显示器 ID 复用启动时那一份。中途插上的屏没有快照，
+  退出还原时退化成「线性表」——相当于把用户花钱做的硬件校准清掉了。
+  <span class="fix">已修：写暖色前先补读原始表；没碰过的屏退出时直接跳过。</span></p>
+</div>
+
+<div class="card">
+  <h3><span class="num">2</span>暂停后「护眼本来关着」会被强行打开</h3>
+  <p>用户做色彩校准、投屏时自己关了护眼，再按一次「暂停 30 分钟」，半小时后屏幕自己变暖，
+  还找不到原因。<span class="fix">已修：护眼已关时拒绝暂停并给出说明，不再武装计时器。</span></p>
+</div>
+
+<div class="card">
+  <h3><span class="num">3</span>全屏放 PPT / 演讲时弹休息提醒</h3>
+  <p>投影仪上突然弹出提醒框，是最尴尬的一类 bug。
+  <span class="fix">已修：用系统通知状态判定全屏/演示模式，命中就把这次提醒顺延一个周期并记日志。</span></p>
+</div>
+
+<div class="card">
+  <h3><span class="num">4</span>完全没有运行日志，用户报障只能靠猜</h3>
+  <p><span class="fix">已修：新增滚动日志 <code>app.log</code>（512KB 自动轮转，全程异常兜底，
+  绝不因为写日志把主流程带崩）。启动首行就带版本、构建时间、系统版本、屏幕缩放、显示器数量。</span></p>
+</div>
+
+<div class="card">
+  <h3><span class="num">5</span>诊断报告缺环境信息</h3>
+  <p>原来的 <code>diag.txt</code> 只有显示器自检，看不出用户装的是哪一版、几块屏。
+  <span class="fix">已修：头部补三行 <code>[env]</code>。</span></p>
+</div>
+
+<div class="card">
+  <h3><span class="num">6</span>Explorer 重启后托盘图标消失</h3>
+  <p>资源管理器崩溃重启是常态，图标不回来，用户就以为程序退了。
+  <span class="fix">已修：监听 <code>TaskbarCreated</code> 广播消息重新注册。</span></p>
+</div>
+
+<div class="card">
+  <h3><span class="num">7</span>缺 WebView2 时只报错、不给下载地址</h3>
+  <p><span class="fix">已修：提示里直接给微软官方引导器链接，用户点一下就能装。</span></p>
+</div>
+
+<div class="card">
+  <h3><span class="num">8</span>托盘悬停提示不显示状态</h3>
+  <p>原来只写「暖序 · 广州」，暂停中忘了、护眼关着都看不出来。
+  <span class="fix">已修：改成「暖序 · 城市 · 状态」，四态为
+  <code>跟随日光</code> / <code>固定暖度</code> / <code>暂停中</code> / <code>护眼已关</code>。</span></p>
+</div>
+
+<div class="card">
+  <h3><span class="num">9</span>卸载后残留 1MB 陈旧日志</h3>
+  <p>日志没在卸载清理清单里，目录也就一直挂着。
+  <span class="fix">已修：卸载时连 <code>.1</code> 一起删；<code>settings.json</code> 按设计保留。</span></p>
+</div>
+
+<div class="card">
+  <h3><span class="num">10</span>README 还停留在原型阶段</h3>
+  <p>原文还在推荐换 Tauri 重写，完全不像一个要给外人看的产品说明。
+  <span class="fix">已重写：功能表、系统要求、无签名 SmartScreen 说明、隐私声明、
+  已知限制、诊断入口、命令行参数表。</span></p>
+</div>
+
+<h2 class="sec">二、回归验收结果</h2>
+<p class="sec-note">全部在<b>装机版</b>上执行，装机版与 <code>dist</code> 三个关键文件 md5 完全一致。</p>
+
+<table>
+  <thead>
+    <tr><th>验收项</th><th>覆盖内容</th><th class="n">结果</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>开窗尺寸</td><td>全新用户 / 老配置迁移 / 用户自定义尺寸，居中与最大化判定</td><td class="n pass">13 / 13</td></tr>
+    <tr><td>全局快捷键</td><td>三组热键在无焦点时生效、暂停四态、总开关关闭后失效</td><td class="n pass">18 / 18</td></tr>
+    <tr><td>开机自启</td><td>静默零窗口、失效路径自愈、激活唤出、注册表读写</td><td class="n pass">9 / 9</td></tr>
+    <tr><td>显示器自检</td><td>枚举 → 写暖色 → 回读比对 → 跨 API 一致性 → 还原</td><td class="n pass">全绿</td></tr>
+    <tr><td>绿色版</td><td>解压即跑、顶层文件夹不散落、启动出窗、优雅退出</td><td class="n pass">通过</td></tr>
+    <tr><td>安装 / 卸载</td><td>覆盖安装、版本号、静默卸载清理范围</td><td class="n pass">通过</td></tr>
+    <tr><td>异常恢复</td><td>强杀后重启自动复位屏幕色彩</td><td class="n pass">通过</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sec">三、建议公测前处理（需要你决策）</h2>
+<p class="sec-note">这三件不是代码问题，但会直接影响第一波用户的第一印象。</p>
+
+<div class="card">
+  <h3><span class="num">A</span>代码签名 <span class="tag t-must">建议做</span></h3>
+  <p>没有签名，用户双击安装包会先看到 SmartScreen 的「已保护你的电脑」红框，
+  点「更多信息 → 仍要运行」才能继续。公测阶段这是最大的一道流失门槛——
+  README 里已经写了说明，但真正点开 README 的人远少于被吓退的人。</p>
+  <p>OV 代码签名证书约 ¥1000–2000/年，能消掉 SmartScreen 警告（需积累一点信誉）；
+  EV 证书（约 ¥3000+/年）即时生效但要走硬件令牌。若预算不允许，至少在下载页
+  放一张「会看到这个提示，这样点」的截图。</p>
+</div>
+
+<div class="card">
+  <h3><span class="num">B</span>安装包里的三个网址还是空的 <span class="tag t-should">公测前填</span></h3>
+  <p><code>installer/暖序.iss</code> 里 <code>AppPublisherURL</code> /
+  <code>AppSupportURL</code> / <code>AppUpdatesURL</code> 仍是注释状态。
+  填上之后，用户在「控制面板 → 程序和功能」里点这个软件，就能直接跳到项目主页和帮助页——
+  这是用户找不到人问时唯一的自助入口。</p>
+  <p><b>需要先确定三个地址</b>（主页 / 帮助 / 更新日志）。目前留空，指向不存在的域名比不填更糟。</p>
+</div>
+
+<div class="card">
+  <h3><span class="num">C</span>发布说明里必须写清的版本号问题 <span class="tag t-should">发布时写</span></h3>
+  <p>版本号从 1.8.4 改回 1.0.0 是重新编号，但<b>装过旧版的用户会觉得这是降级</b>，
+  「程序和功能」里显示的版本会从 1.8.4 变成 1.0.0。升级本身没问题（同一个安装标识，
+  会正常覆盖），但建议在发布说明里一句话交代：「版本号重新编号，1.0.0 是首个公测版，
+  功能上是 1.8.4 的延续」。</p>
+</div>
+
+<h2 class="sec">四、已知限制（建议原样写进发布说明）</h2>
+<p class="sec-note">这些是平台或驱动的边界，不是能修的 bug。提前说清楚，比让用户踩到再问要好。</p>
+
+<ul class="plain">
+  <li><b>HDR 模式下调色无效。</b>Windows 不允许在 HDR 下改伽马表。程序会检测并弹提示，
+  需要用户关掉 HDR。</li>
+  <li><b>部分显卡驱动 / 虚拟显示器 / 远程桌面会拒绝写入。</b>同样会提示，不是程序坏了。</li>
+  <li><b>混合 DPI 多显示器时副屏界面可能发虚。</b>笔记本 150% + 外接屏 100% 的常见组合。</li>
+  <li><b>界面上的暖度是调节强度，不是蓝光过滤百分比。</b>没有仪器实测，不要写成「过滤 65% 蓝光」。</li>
+  <li><b>休息提醒默认关闭。</b>这是刻意的（护眼色温才是主功能，弹窗是打扰），
+  但用户可能根本不知道有这个功能——建议在首次启动的引导或发布说明里提一句。</li>
+  <li><b>没有自动更新。</b>新版本要用户自己去下载重装。</li>
+</ul>
+
+<h2 class="sec">五、本次审计未能覆盖的部分</h2>
+<p class="sec-note">如实说明，避免把「没测」当成「没问题」。</p>
+
+<ul class="plain">
+  <li><b>多显示器真机。</b>开发机只有 1 块屏，多屏路径只做了代码审查与跨 API 一致性验证，
+  没有双屏实机跑过。建议公测第一周重点收集双屏用户的反馈。</li>
+  <li><b>「为所有用户安装」模式。</b>需要管理员权限，本次只验了「仅为我安装」。</li>
+  <li><b>Windows 10。</b>开发机是 Windows 11，Win10 1809 只在代码层面做了兼容处理，
+  没有实机验证。</li>
+  <li><b>长期稳定性。</b>连续运行数天后的内存与伽马表漂移未测。</li>
+</ul>
+
+<h2 class="sec">六、暂不建议做的</h2>
+<ul class="plain">
+  <li><span class="tag t-later">先放着</span> <b>崩溃上报 / 埋点。</b>和「无埋点无遥测」的隐私承诺冲突，
+  公测阶段靠用户主动发 <code>app.log</code> 足够。</li>
+  <li><span class="tag t-later">先放着</span> <b>自动更新框架。</b>引入的复杂度和风险大于收益，
+  等用户量起来再说。</li>
+  <li><span class="tag t-later">先放着</span> <b>配置数据版本号。</b>目前靠默认值兜底 + 城市别名迁移够用，
+  真正需要跨版本迁移时再加字段。</li>
+</ul>
+
+<footer>
+  验收环境：Windows 11 · 4K @150% · 单显示器 ·
+  .NET 8 self-contained win-x64 · WebView2 1.0.3650.58<br>
+  产物：<code>release\暖序-1.0.0-安装程序.exe</code>（49.4 MB）·
+  <code>release\暖序-1.0.0-绿色版.zip</code>（62.3 MB）
+</footer>
+
+</div>
+</body>
+</html>

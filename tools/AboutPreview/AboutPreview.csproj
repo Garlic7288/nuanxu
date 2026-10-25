@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>AboutPreview</AssemblyName>
+    <RootNamespace>AboutPreview</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\NuanXu\app.ico" Link="app.ico" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="..\..\NuanXu\donate-qr.png" LogicalName="NuanXu.donate-qr.png" />
+  </ItemGroup>
+</Project>

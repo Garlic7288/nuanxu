@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>暖序</AssemblyName>
+    <RootNamespace>NuanXu</RootNamespace>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <!--
+      .NET 8 SDK 在 git 仓库里构建时，会把 InformationalVersion 追加成「1.0.0+e36」
+      （e36 = 短提交号）。Application.ProductVersion 读的就是它，于是「关于」里
+      的版本胶囊变成「v1.0.0+e36」——那串提交号对用户没有意义，66px 的胶囊也放不下。
+      关掉之后 ProductVersion 就是干净的 1.0.0。
+    -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!--
+      只保留中文与英文资源：默认会带 12 种语言的卫星程序集，白白多出约 15MB，
+      安装包压缩前就白扛一次体积。
+    -->
+    <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>
+    <!--
+      必须自带运行时：用户机器上不一定装了 .NET 8，缺了就会弹「Download it now」。
+      固定在这里，避免哪天只写 dotnet publish 就发出一份依赖系统运行时的残废包。
+    -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3650.58" />
+    <Content Include="..\index.html" Link="index.html" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <!--
+    赞赏码：存在则编进程序集（单文件分发）；不存在时程序显示占位提示，不影响编译。
+    注意源图必须是「正方形 + 带静区」的 PNG —— 卡片用 Zoom 等比缩放，
+    非正方形图会被塞成 96×82，码区实际只剩 61px，扫不出来。
+  -->
+  <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\donate-qr.png')">
+    <EmbeddedResource Include="donate-qr.png" LogicalName="NuanXu.donate-qr.png" />
+    <Content Include="donate-qr.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <!--
+    图标生成脚本只在「脚本存在，且比 app.ico 新」时才跑。
+    加 Exists 条件的原因：脚本被安全软件删掉过一次，而 MSBuild 在 Inputs 文件缺失时
+    会认为目标必定过期、照样执行 Exec，结果 dotnet build 直接 MSB3073 失败——
+    对克隆仓库的人就是「装不上依赖」级别的劝退。
+    app.ico 已入库，脚本缺失也不影响图标。
+  -->
+  <Target Name="GenerateNuanXuIcon" BeforeTargets="PrepareForBuild"
+          Condition="Exists('$(MSBuildProjectDirectory)\GenerateIcon.ps1')"
+          Inputs="$(MSBuildProjectDirectory)\GenerateIcon.ps1"
+          Outputs="$(MSBuildProjectDirectory)\app.ico">
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\GenerateIcon.ps1&quot;" />
+  </Target>
+</Project>

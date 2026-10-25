@@ -1,0 +1,51 @@
+# 构建产物
+dist/
+dist_new/
+dist_staging/
+bin/
+obj/
+*.user
+
+# 发布产物（安装包与绿色版，体积大，走 GitHub Release，不入库）
+release/
+
+# 运行时产物
+*.log
+check.js
+*.WebView2/
+
+# 编辑器
+.vs/
+.vscode/
+*.suo
+
+# 开发辅助目录：AI 工作记忆，含开发机细节，不能公开
+.workbuddy-ai/
+
+# 历史备份（旧版界面与源码）
+*.bak
+
+# 验收脚本的截图产物（约 13 MB）
+tools/shots/
+
+# 构建期自动下载的 WebView2 引导器，由 build-installer.ps1 按需拉取
+installer/redist/
+
+# 个人微信二维码：代码未引用的孤儿文件，不该随仓库公开
+NuanXu/wechat-qr.png
+
+# 空占位文件
+site/新建 文本文档.txt
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 工具的输出
+tools/**/bin/
+tools/**/obj/
+tools/**/*.cache
+tools/**/Extracted.cs
+tools/**/about*.png
+tools/**/about*.txt
+tools/**/qr-preview.png

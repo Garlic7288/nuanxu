@@ -1,0 +1,18 @@
+# 换行统一交给 git 判断，但脚本类必须固定 CRLF
+* text=auto
+
+# PowerShell 5.1 按 GBK 解析无 BOM 文件会失败，脚本必须保持 UTF-8 BOM + CRLF
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.iss text eol=crlf
+*.isl text eol=crlf
+
+# 二进制文件，禁止任何换行转换
+*.png binary
+*.jpg binary
+*.ico binary
+*.exe binary
+*.zip binary
+*.dll binary
+*.woff2 binary

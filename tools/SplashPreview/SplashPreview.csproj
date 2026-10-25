@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SplashPreview</AssemblyName>
+    <RootNamespace>SplashPreview</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- 直接编译主工程的启动画面源文件，保证预览与真实效果同源 -->
+    <Compile Include="..\..\NuanXu\SplashForm.cs" Link="SplashForm.cs" />
+  </ItemGroup>
+</Project>
